@@ -89,17 +89,21 @@ st.title("🛰️ Sentinel-5p based Air Pollutant(NO2,SO2,O3,CO,HCHO,AI) Monitor
 col1, col2 = st.columns([3, 1])
 
 with col1:
-    with st.sidebar:
-        st.header("🧭 Controls")
-        pollutant = st.selectbox("Select Pollutant", list(pollutant_info.keys()))
-        year = st.selectbox("Select Year", list(range(2018, 2026)), index=3)
-         months_dict = {
-    1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
-    7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"
-}
+   with st.sidebar:
+    st.header("🧭 Controls")
+    
+    pollutant = st.selectbox("Select Pollutant", list(pollutant_info.keys()))
+    year = st.selectbox("Select Year", list(range(2018, 2026)), index=3)
 
-month_name = st.selectbox("Select Month", list(months_dict.values()), index=0)
-month = list(months_dict.keys())[list(months_dict.values()).index(month_name)]
+    # ✅ Properly aligned month selector
+    months_dict = {
+        1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
+        7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"
+    }
+
+    month_name = st.selectbox("Select Month", list(months_dict.values()), index=0)
+    month = list(months_dict.keys())[list(months_dict.values()).index(month_name)]
+
                                                                                                         
 
         st.markdown("**🖱️ 🖱️ Click on map to inspect value ▶ ▶ ▶**")
