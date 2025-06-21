@@ -9,3 +9,4 @@ geemap
 folium
 geopandas
 streamlit-folium
+setuptools
