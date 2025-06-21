@@ -93,11 +93,14 @@ with col1:
         st.header("🧭 Controls")
         pollutant = st.selectbox("Select Pollutant", list(pollutant_info.keys()))
         year = st.selectbox("Select Year", list(range(2018, 2026)), index=3)
-        months_dict = {
-            1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
-            7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"
-        }
-        month_name = st.selectbox("Select Month", list(months_dict.values()), index=0)                                                                                                                  month = list(months_dict.keys())[list(months_dict.values()).index(month_name)]
+         months_dict = {
+    1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
+    7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"
+}
+
+month_name = st.selectbox("Select Month", list(months_dict.values()), index=0)
+month = list(months_dict.keys())[list(months_dict.values()).index(month_name)]
+                                                                                                        
 
         st.markdown("**🖱️ 🖱️ Click on map to inspect value ▶ ▶ ▶**")
         lat = st.text_input("Latitude (e.g., 23.8351)")
