@@ -6,10 +6,24 @@ import geopandas as gpd
 from streamlit_folium import st_folium
 import geemap.folium as geemap
 
-# ✅ EE Initialization using service account
-service_account = "savar-no2--8-to-2025-c1f7606de@industrial-glow-461921-k4.iam.gserviceaccount.com"
-key_file = "service_account.json"  # Ensure this file is in your app folder
-credentials = ee.ServiceAccountCredentials(service_account, key_file)
+# ✅ EE Initialization using embedded service account credentials
+service_account_info = {
+  "type": "service_account",
+  "project_id": "industrial-glow-461921-k4",
+  "private_key_id": "REPLACE_WITH_YOUR_PRIVATE_KEY_ID",
+  "private_key": "-----BEGIN PRIVATE KEY-----\\nREPLACE_WITH_YOUR_PRIVATE_KEY\\n-----END PRIVATE KEY-----\\n",
+  "client_email": "savar-no2--8-to-2025-c1f7606de@industrial-glow-461921-k4.iam.gserviceaccount.com",
+  "client_id": "REPLACE_WITH_YOUR_CLIENT_ID",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/savar-no2--8-to-2025-c1f7606de%40industrial-glow-461921-k4.iam.gserviceaccount.com"
+}
+
+credentials = ee.ServiceAccountCredentials(
+    service_account_info["client_email"],
+    key_data=json.dumps(service_account_info)
+)
 ee.Initialize(credentials)
 
 # Patch Folium for EE Layers
@@ -29,7 +43,6 @@ folium.Map.add_ee_layer = add_ee_layer
 aoi_path = "Savar EOI Shape File.json"
 savar_gdf = gpd.read_file(aoi_path)
 savar_geom = geemap.geopandas_to_ee(savar_gdf)
-aoi_style = {'color': 'black', 'fillColor': '00000000'}
 
 # Pollutant Info
 pollutant_info = {
@@ -100,7 +113,7 @@ with col1:
         }
         month_name = st.selectbox("Select Month", list(months_dict.values()))
         month = list(months_dict.keys())[list(months_dict.values()).index(month_name)]
-        
+
         lat = st.text_input("Latitude (e.g., 23.8351)")
         lon = st.text_input("Longitude (e.g., 90.2564)")
         inspect_btn = st.button("🕵️ Inspect Point")
@@ -116,7 +129,6 @@ with col1:
             <div style='font-size:15px;'>© 2025 atiqueishrakanik</div>
         """, unsafe_allow_html=True)
 
-    # Map rendering
     center = [23.8351, 90.2564]
     m = folium.Map(
         location=center,
@@ -128,7 +140,6 @@ with col1:
     image = get_monthly_image(year, month, pollutant)
     m.add_ee_layer(image, pollutant_info[pollutant]['vis'], f"{pollutant} {year}-{month:02d}")
 
-    # Add AOI
     aoi_geojson = json.loads(savar_gdf.to_json())
     folium.GeoJson(
         aoi_geojson,
@@ -136,11 +147,9 @@ with col1:
         style_function=lambda x: {'color': 'black', 'fillColor': 'transparent', 'weight': 2}
     ).add_to(m)
 
-    # Display Map
     map_key = f"{pollutant}_{year}_{month}"
     st_map = st_folium(m, width=850, height=600, returned_objects=["last_clicked"], key=map_key)
 
-    # Point Inspector
     if inspect_btn and lat and lon:
         try:
             point = ee.Geometry.Point(float(lon), float(lat))
@@ -168,17 +177,4 @@ with col1:
 
 with col2:
     vis = pollutant_info[pollutant]['vis']
-    unit = pollutant_info[pollutant]['unit']
-    palette = vis['palette']
-    min_val = vis['min']
-    max_val = vis['max']
-    st.markdown(f"### Legend ({pollutant}, {unit})")
-    steps = len(palette)
-    for i, color in enumerate(palette):
-        val = min_val + (max_val - min_val) * i / (steps - 1)
-        st.markdown(
-            f"<div style='display:flex; align-items:center; margin-bottom:4px;'>"
-            f"<div style='width:20px; height:20px; background-color:{color}; margin-right:10px;'></div>"
-            f"<div>{val:.6f}</div></div>",
-            unsafe_allow_html=True
-        )
+    un
