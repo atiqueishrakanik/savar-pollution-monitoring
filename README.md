@@ -1,22 +1,17 @@
-# Sentinel-5P Based Air Pollutant Monitoring over Savar, Bangladesh (2018–2025)
+# Sentinel-5p based Air Pollutant Monitoring over Savar, Bangladesh (2018–2025)
 
-This project provides an interactive web-based tool for monitoring atmospheric pollutants over **Savar**, a rapidly growing industrial suburb of Dhaka, Bangladesh. Savar is known as the hub of the country's garments export industry, which plays a crucial role in Bangladesh's economy and global reputation.
+This project provides an interactive web-based tool for monitoring key atmospheric pollutants over Savar — a rapidly industrializing suburban city near Dhaka, Bangladesh, known as a major garments export hub. Using Sentinel-5P satellite data (2018-2025), the platform visualizes pollutants such as NO₂, CO, O₃, SO₂, HCHO, and Aerosol Index with monthly resolution.
 
-Using **Sentinel-5P satellite data** from 2018 to 2025, this app visualizes key air pollutants:
-- NO₂ (Nitrogen Dioxide)
-- CO (Carbon Monoxide)
-- O₃ (Ozone)
-- SO₂ (Sulfur Dioxide)
-- HCHO (Formaldehyde)
-- Aerosol Index
+## Features
 
-### 🔍 Features
-- Interactive map to explore monthly atmospheric pollution
-- Click on any point to inspect pollutant concentration
-- Sidebar controls for selecting pollutant, year, and month
-- Dynamic color legends for better visualization
-- Developed using Streamlit, Earth Engine, Folium, and GeoPandas
+- Interactive pollutant map with Google satellite basemap
+- Select pollutant, year, and month to visualize spatiotemporal trends
+- Click or enter coordinates to inspect pollutant values on the map
+- Dynamic legend showing color scale and units
+- Author and citation info embedded
 
-### 📦 How to Run
+## Installation
+
 ```bash
-streamlit run geo_pollution_app.py
+pip install -r requirements.txt
+
