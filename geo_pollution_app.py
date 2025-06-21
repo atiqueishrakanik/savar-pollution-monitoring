@@ -3,7 +3,7 @@ import ee
 import folium
 import geopandas as gpd
 from streamlit_folium import st_folium
-import geemap.foliumap as geemap
+import geemap.folium as geemap
 
 # EE Initialization
 try:
@@ -136,10 +136,18 @@ with col1:
         tiles='https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}',
         attr='Google'
     )
-
     image = get_monthly_image(year, month, pollutant)
     m.add_ee_layer(image, pollutant_info[pollutant]['vis'], f"{pollutant} {year}-{month:02d}")
-    m.add_ee_layer(savar_geom.style(**aoi_style), {}, "Savar AOI")
+
+    import json  # Better to put this import at the top of your file
+
+    aoi_geojson = json.loads(savar_gdf.to_json())
+    folium.GeoJson(
+    aoi_geojson,
+    name="Savar AOI",
+    style_function=lambda x: {'color': 'black', 'fillColor': 'transparent', 'weight': 2}
+    ).add_to(m)
+
 
     # Dynamic key to force rerender
     map_key = f"{pollutant}_{year}_{month}"
