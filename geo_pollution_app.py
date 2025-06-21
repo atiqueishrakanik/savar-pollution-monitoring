@@ -5,12 +5,13 @@ import geopandas as gpd
 from streamlit_folium import st_folium
 import geemap.folium as geemap
 
-# EE Initialization
-try:
-    ee.Initialize(project='industrial-glow-461921-k4')
-except:
-    ee.Authenticate()
-    ee.Initialize(project='industrial-glow-461921-k4')
+
+# ✅ EE Initialization using service account
+service_account = "savar-no2--8-to-2025-c1f7606de@industrial-glow-461921-k4.iam.gserviceaccount.com"
+key_file = "service_account.json"  # Place this file in your app folder
+
+credentials = ee.ServiceAccountCredentials(service_account, key_file)
+ee.Initialize(credentials)
 
 # Patch Folium for EE layers
 def add_ee_layer(self, ee_image_object, vis_params, name):
