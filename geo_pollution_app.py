@@ -95,38 +95,36 @@ with col1:
     pollutant = st.selectbox("Select Pollutant", list(pollutant_info.keys()))
     year = st.selectbox("Select Year", list(range(2018, 2026)), index=3)
 
-    # ✅ Properly aligned month selector
-    months_dict = {
+        months_dict = {
         1: "January", 2: "February", 3: "March", 4: "April", 5: "May", 6: "June",
         7: "July", 8: "August", 9: "September", 10: "October", 11: "November", 12: "December"
     }
 
     month_name = st.selectbox("Select Month", list(months_dict.values()), index=0)
     month = list(months_dict.keys())[list(months_dict.values()).index(month_name)]
-       
- st.markdown("**🖱️ 🖱️ Click on map to inspect value ▶ ▶ ▶**")
-                                                                                                        
 
-        lat = st.text_input("Latitude (e.g., 23.8351)")
-        lon = st.text_input("Longitude (e.g., 90.2564)")
-        inspect_btn = st.button("🕵️ Inspect Point")
+    st.markdown("**🖱️ 🖱️ Click on map to inspect value ▶ ▶ ▶**")
 
-        inspected_text = st.empty()
+    lat = st.text_input("Latitude (e.g., 23.8351)")
+    lon = st.text_input("Longitude (e.g., 90.2564)")
+    inspect_btn = st.button("🕵️ Inspect Point")
 
-        st.markdown("---", unsafe_allow_html=True)
-        st.markdown(
-            """
-            <div style='font-size:20px; font-weight:bold;'>Author</div>
-            <div style='font-size:21px;'>Atique Ishrak Anik,Chittagong University of Engineering and Technology (CUET)</div>
-            <a href='https://orcid.org/0009-0008-2175-0835' target='_blank'>ORCID</a><br>
-            <a href='https://www.researchgate.net/profile/Atique-Ishrak-Anik' target='_blank'>ResearchGate</a>
-           <div style='font-size:15px;'>Cite This:Anik, Atique (2025). Sentinel-5p based Air Pollutant(NO2,SO2,O3,CO,HCHO,AI) Monitoring over Savar,Bangladesh (2018–2025). figshare. Software. https://doi.org/10.6084/m9.figshare.29375336.v1 </div>
+    inspected_text = st.empty()
 
-            <div style='font-size:15px;'>Copyright (c) 2025 atiqueishrakanik</div>
-
-             """,
-            unsafe_allow_html=True
-        )
+    st.markdown("---", unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div style='font-size:20px; font-weight:bold;'>Author</div>
+        <div style='font-size:21px;'>Atique Ishrak Anik, Chittagong University of Engineering and Technology (CUET)</div>
+        <a href='https://orcid.org/0009-0008-2175-0835' target='_blank'>ORCID</a><br>
+        <a href='https://www.researchgate.net/profile/Atique-Ishrak-Anik' target='_blank'>ResearchGate</a><br>
+        <div style='font-size:15px;'>
+            Cite This: Anik, Atique (2025). Sentinel-5p based Air Pollutant (NO₂, SO₂, O₃, CO, HCHO, AI) Monitoring over Savar, Bangladesh (2018–2025). figshare. Software. https://doi.org/10.6084/m9.figshare.29375336.v1
+        </div>
+        <div style='font-size:15px;'>Copyright (c) 2025 atiqueishrakanik</div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # Map Setup
     center = [23.8351, 90.2564]
