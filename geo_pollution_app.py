@@ -103,10 +103,10 @@ with col1:
 
     month_name = st.selectbox("Select Month", list(months_dict.values()), index=0)
     month = list(months_dict.keys())[list(months_dict.values()).index(month_name)]
-
+       
+ st.markdown("**🖱️ 🖱️ Click on map to inspect value ▶ ▶ ▶**")
                                                                                                         
 
-        st.markdown("**🖱️ 🖱️ Click on map to inspect value ▶ ▶ ▶**")
         lat = st.text_input("Latitude (e.g., 23.8351)")
         lon = st.text_input("Longitude (e.g., 90.2564)")
         inspect_btn = st.button("🕵️ Inspect Point")
