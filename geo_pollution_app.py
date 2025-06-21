@@ -5,26 +5,23 @@ import json
 import geopandas as gpd
 from streamlit_folium import st_folium
 import geemap.folium as geemap
+from dotenv import load_dotenv
+import os
 
-# ✅ EE Initialization using embedded service account credentials
-service_account_info = {
-  "type": "service_account",
-  "project_id": "industrial-glow-461921-k4",
-  "private_key_id": "REPLACE_WITH_YOUR_PRIVATE_KEY_ID",
-  "private_key": "-----BEGIN PRIVATE KEY-----\\nREPLACE_WITH_YOUR_PRIVATE_KEY\\n-----END PRIVATE KEY-----\\n",
-  "client_email": "savar-no2--8-to-2025-c1f7606de@industrial-glow-461921-k4.iam.gserviceaccount.com",
-  "client_id": "REPLACE_WITH_YOUR_CLIENT_ID",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/savar-no2--8-to-2025-c1f7606de%40industrial-glow-461921-k4.iam.gserviceaccount.com"
-}
+# Load environment variables
+load_dotenv()
 
-credentials = ee.ServiceAccountCredentials(
-    service_account_info["client_email"],
-    key_data=json.dumps(service_account_info)
-)
-ee.Initialize(credentials)
+# ✅ EE Initialization using environment variable
+try:
+    service_account_info = json.loads(os.getenv("GEE_SERVICE_ACCOUNT"))
+    credentials = ee.ServiceAccountCredentials(
+        service_account_info["client_email"],
+        key_data=json.dumps(service_account_info)
+    )
+    ee.Initialize(credentials)
+except Exception as e:
+    st.error(f"Failed to initialize Google Earth Engine: {str(e)}")
+    st.stop()
 
 # Patch Folium for EE Layers
 def add_ee_layer(self, ee_image_object, vis_params, name):
@@ -41,8 +38,15 @@ folium.Map.add_ee_layer = add_ee_layer
 
 # Load AOI
 aoi_path = "Savar EOI Shape File.json"
-savar_gdf = gpd.read_file(aoi_path)
-savar_geom = geemap.geopandas_to_ee(savar_gdf)
+try:
+    savar_gdf = gpd.read_file(aoi_path)
+    savar_geom = geemap.geopandas_to_ee(savar_gdf)
+except FileNotFoundError:
+    st.error("AOI file not found. Please ensure 'Savar EOI Shape File.json' is in the project directory.")
+    st.stop()
+except Exception as e:
+    st.error(f"Error loading AOI: {str(e)}")
+    st.stop()
 
 # Pollutant Info
 pollutant_info = {
@@ -62,39 +66,45 @@ pollutant_info = {
         'dataset': 'COPERNICUS/S5P/OFFL/L3_O3',
         'band': 'O3_column_number_density',
         'unit': 'mol/m²',
-        'vis': {'min': 0.1, 'max': 0.13, 'palette': ['orange','red','blue','lime','yellow','maroon','cyan','purple']}
+        'vis': {'min': 0.1, 'max': 0.13, 'palette': ['orange', 'red', 'blue', 'lime', 'yellow', 'maroon', 'cyan', 'purple']}
     },
     'SO₂': {
         'dataset': 'COPERNICUS/S5P/OFFL/L3_SO2',
         'band': 'SO2_column_number_density',
         'unit': 'mol/m²',
-        'vis': {'min': 0, 'max': 0.0005, 'palette': ['purple','blue','green','yellow','orange','red','lime','cyan']}
+        'vis': {'min': 0, 'max': 0.0005, 'palette': ['purple', 'blue', 'green', 'yellow', 'orange', 'red', 'lime', 'cyan']}
     },
     'HCHO': {
         'dataset': 'COPERNICUS/S5P/OFFL/L3_HCHO',
         'band': 'tropospheric_HCHO_column_number_density',
         'unit': 'mol/m²',
-        'vis': {'min': 0.0001, 'max': 0.00025, 'palette': ['white','green','yellow','orange','red','blue']}
+        'vis': {'min': 0.0001, 'max': 0.00025, 'palette': ['white', 'green', 'yellow', 'orange', 'red', 'blue']}
     },
     'Aerosol Index': {
         'dataset': 'COPERNICUS/S5P/OFFL/L3_AER_AI',
         'band': 'absorbing_aerosol_index',
         'unit': 'Index',
-        'vis': {'min': -1.5, 'max': 0.4, 'palette': ['red','blue','green','yellow','orange','purple','lime','cyan']}
+        'vis': {'min': -1.5, 'max': 0.4, 'palette': ['red', 'blue', 'green', 'yellow', 'orange', 'purple', 'lime', 'cyan']}
     }
 }
 
-# Monthly Image Loader
+# Monthly Image Loader with caching
+@st.cache_data
 def get_monthly_image(year, month, pollutant):
-    p = pollutant_info[pollutant]
-    start = ee.Date.fromYMD(year, month, 1)
-    end = start.advance(1, 'month')
-    return (ee.ImageCollection(p['dataset'])
-            .filterDate(start, end)
-            .filterBounds(savar_geom)
-            .select(p['band'])
-            .mean()
-            .clip(savar_geom))
+    try:
+        p = pollutant_info[pollutant]
+        start = ee.Date.fromYMD(year, month, 1)
+        end = start.advance(1, 'month')
+        collection = (ee.ImageCollection(p['dataset'])
+                      .filterDate(start, end)
+                      .filterBounds(savar_geom)
+                      .select(p['band']))
+        if collection.size().getInfo() == 0:
+            return None
+        return collection.mean().clip(savar_geom)
+    except Exception as e:
+        st.error(f"Error fetching data for {pollutant}: {str(e)}")
+        return None
 
 # UI Setup
 st.set_page_config(layout="wide")
@@ -138,7 +148,10 @@ with col1:
         attr='Google'
     )
     image = get_monthly_image(year, month, pollutant)
-    m.add_ee_layer(image, pollutant_info[pollutant]['vis'], f"{pollutant} {year}-{month:02d}")
+    if image is None:
+        st.warning(f"No data available for {pollutant} in {months_dict[month]} {year}.")
+    else:
+        m.add_ee_layer(image, pollutant_info[pollutant]['vis'], f"{pollutant} {year}-{month:02d}")
 
     aoi_geojson = json.loads(savar_gdf.to_json())
     folium.GeoJson(
@@ -148,33 +161,59 @@ with col1:
     ).add_to(m)
 
     map_key = f"{pollutant}_{year}_{month}"
-    st_map = st_folium(m, width=850, height=600, returned_objects=["last_clicked"], key=map_key)
+    with st.spinner("Loading map..."):
+        st_map = st_folium(m, width=850, height=600, returned_objects=["last_clicked"], key=map_key)
 
     if inspect_btn and lat and lon:
         try:
-            point = ee.Geometry.Point(float(lon), float(lat))
-            val_dict = image.reduceRegion(ee.Reducer.first(), point, 1000, 1e13).getInfo()
+            lat_f = float(lat)
+            lon_f = float(lon)
+            if not (-90 <= lat_f <= 90 and -180 <= lon_f <= 180):
+                inspected_text.error("Invalid coordinates: Latitude must be -90 to 90, Longitude must be -180 to 180.")
+            elif image is None:
+                inspected_text.warning("No data available for the selected period.")
+            else:
+                point = ee.Geometry.Point(lon_f, lat_f)
+                val_dict = image.reduceRegion(ee.Reducer.first(), point, 7000).getInfo()
+                value = val_dict.get(pollutant_info[pollutant]['band'])
+                unit = pollutant_info[pollutant]['unit']
+                if value is not None:
+                    inspected_text.success(f"{pollutant} @ ({lat_f:.4f}, {lon_f:.4f}): {value:.6f} {unit}")
+                else:
+                    inspected_text.warning("No data at this location.")
+        except ValueError:
+            inspected_text.error("Invalid input: Latitude and Longitude must be numeric.")
+        except Exception as e:
+            inspected_text.error(f"Error retrieving value: {str(e)}")
+
+    if st_map and st_map.get("last_clicked") and image is not None:
+        try:
+            coords = st_map["last_clicked"]
+            lon_c, lat_c = coords["lng"], coords["lat"]
+            point = ee.Geometry.Point([lon_c, lat_c])
+            val_dict = image.reduceRegion(ee.Reducer.first(), point, 7000).getInfo()
             value = val_dict.get(pollutant_info[pollutant]['band'])
             unit = pollutant_info[pollutant]['unit']
             if value is not None:
-                inspected_text.success(f"{pollutant} @ ({float(lat):.4f}, {float(lon):.4f}): {value:.6f} {unit}")
+                inspected_text.success(f"{pollutant} @ ({lat_c:.4f}, {lon_c:.4f}): {value:.6f} {unit}")
             else:
-                inspected_text.warning("No data at this location.")
-        except Exception:
-            inspected_text.error("Error retrieving value.")
-
-    if st_map and st_map.get("last_clicked"):
-        coords = st_map["last_clicked"]
-        lon_c, lat_c = coords["lng"], coords["lat"]
-        point = ee.Geometry.Point([lon_c, lat_c])
-        val_dict = image.reduceRegion(ee.Reducer.first(), point, 1000, 1e13).getInfo()
-        value = val_dict.get(pollutant_info[pollutant]['band'])
-        unit = pollutant_info[pollutant]['unit']
-        if value is not None:
-            inspected_text.success(f"{pollutant} @ ({lat_c:.4f}, {lon_c:.4f}): {value:.6f} {unit}")
-        else:
-            inspected_text.warning("No data at this point.")
+                inspected_text.warning("No data at this point.")
+        except Exception as e:
+            inspected_text.error(f"Error retrieving value: {str(e)}")
 
 with col2:
     vis = pollutant_info[pollutant]['vis']
-    un
+    unit = pollutant_info[pollutant]['unit']
+    palette = vis['palette']
+    min_val = vis['min']
+    max_val = vis['max']
+    st.markdown(f"### Legend ({pollutant}, {unit})")
+    steps = len(palette)
+    for i, color in enumerate(palette):
+        val = min_val + (max_val - min_val) * i / (steps - 1)
+        st.markdown(
+            f"<div style='display:flex; align-items:center; margin-bottom:4px;'>"
+            f"<div style='width:20px; height:20px; background-color:{color}; margin-right:10px;'></div>"
+            f"<div>{val:.6f}</div></div>",
+            unsafe_allow_html=True
+        )
