@@ -4,3 +4,8 @@ folium
 geopandas
 earthengine-api
 pandas
+streamlit
+geemap
+folium
+geopandas
+streamlit-folium
